@@ -30,7 +30,7 @@ public class CategoryService (IUnitOfWork unitOfWork,
         var categories = await _unitOfWork.CategoryInterface.GetAllAsync();
         if (category.IsExist(categories))
         {
-            throw new CustomException.($"{category.Name} uje bor!");
+            throw new CustomException($"{category.Name} uje bor!");
         }
 
         await _unitOfWork.CategoryInterface.AddAsync(category);
@@ -57,18 +57,51 @@ public class CategoryService (IUnitOfWork unitOfWork,
                          .ToList();
     }
 
-    public Task<PagedList<CategoryDto>> GetAllPaged(int pageSize, int pageNumber)
+    public async Task<PagedList<CategoryDto>> GetAllPaged(int pageSize, int pageNumber)
     {
-        throw new NotImplementedException();
+        var categories = await GetAll();
+        PagedList<CategoryDto> pagedList = new(categories, categories.Count, pageNumber, pageSize);
+        return pagedList.ToPagedList(categories,
+                                      pageSize,
+                                      pageNumber);
     }
 
-    public Task<CategoryDto> GetById(int id)
+    public async Task<CategoryDto> GetById(int id)
     {
-        throw new NotImplementedException();
+        var category = await _unitOfWork.CategoryInterface.GetByIdAsync(id);
+        if (category is null)
+        {
+            throw new ArgumentException("Category topilmadi!");
+        }
+        return _mapper.Map<CategoryDto>(category);
     }
 
-    public Task Update(UpdateCategoryDto categoryDto)
+    public async Task Update(UpdateCategoryDto categoryDto)
     {
-        throw new NotImplementedException();
+        if (categoryDto is null)
+        {
+            throw new ArgumentNullException("Category null bo'lib qoldi!");
+        }
+        var categories = await _unitOfWork.CategoryInterface.GetAllAsync();
+        var category = categories.FirstOrDefault(c => c.Id == categoryDto.Id);
+
+        if (category is null)
+        {
+            throw new ArgumentNullException("Category topilmadi!");
+        }
+
+        var updateCategory = _mapper.Map<Category>(categoryDto);
+        if (!updateCategory.IsValid())
+        {
+            throw new CustomException("Category Invalid!");
+        }
+
+        if (updateCategory.IsExist(categories))
+        {
+            throw new CustomException("Category uje bor");
+        }
+
+        await _unitOfWork.CategoryInterface.UpdateAsync(updateCategory);
+        await _unitOfWork.SaveAsync();
     }
 }
