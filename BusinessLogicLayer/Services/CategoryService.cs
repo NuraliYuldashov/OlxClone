@@ -4,27 +4,29 @@ using BusinessLogicLayer.Interfaces;
 using DataAccesLayer.Interfaces;
 using DataAccesLayer.Models;
 using DTO.DTOs.CategoryDtos;
+using Microsoft.Extensions.Logging;
 
 namespace BusinessLogicLayer.Services;
-
 public class CategoryService (IUnitOfWork unitOfWork,
-                              IMapper mapper)
+                              IMapper mapper,
+                              ILogger<Category> logger)
     : ICategoryService
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMapper _mapper = mapper;
+    private readonly ILogger<Category> _logger = logger;
 
     public async Task Add(AddCategoryDto categoryDto)
     {
-        if (categoryDto == null)
+        if (categoryDto is null)
         {
-            throw new ArgumentNullException("Category null bo'lib qoldi!");
+            throw new ArgumentNullException("Category null bo'p qoldi!");
         }
 
         var category = _mapper.Map<Category>(categoryDto);
         if (!category.IsValid())
         {
-            throw new CustomException("Invalid Category");
+            throw new CustomException("Invalid Category!");
         }
 
         var categories = await _unitOfWork.CategoryInterface.GetAllAsync();
@@ -36,6 +38,11 @@ public class CategoryService (IUnitOfWork unitOfWork,
         await _unitOfWork.CategoryInterface.AddAsync(category);
         await _unitOfWork.SaveAsync();
 
+        //await _unitOfWork.CategoryInterface.TestTransaction();
+
+        //await _unitOfWork.CategoryInterface.TestAdoNet();
+
+        //await _unitOfWork.CategoryInterface.TestTSQL();
     }
 
     public async Task Delete(int id)
@@ -43,16 +50,29 @@ public class CategoryService (IUnitOfWork unitOfWork,
         var category = await _unitOfWork.CategoryInterface.GetByIdAsync(id);
         if (category is null)
         {
-            throw new ArgumentException("Bunday Category mavjud emas!");
+            throw new ArgumentNullException("Bunaqa Category yo'q!");
         }
 
         await _unitOfWork.CategoryInterface.DeleteAsync(category);
         await _unitOfWork.SaveAsync();
     }
 
+    public async Task<List<CategoryDto>> Filter(bool ordered, Func<string, bool, bool> func)
+    {
+        var list = await _unitOfWork.CategoryInterface.GetAllAsync();
+        list = list.Where(c => func(c.Name, ordered))
+                   .ToList();
+
+
+
+
+        return (List<CategoryDto>)list.Select(c => _mapper.Map<CategoryDto>(c));
+    }
+
     public async Task<List<CategoryDto>> GetAll()
     {
-        var categories = await _unitOfWork.CategoryInterface.GetAllAsync();
+        var categories = await _unitOfWork.CategoryInterface
+                                          .GetAllWithSubcategoriesAsync();
         return categories.Select(c => _mapper.Map<CategoryDto>(c))
                          .ToList();
     }
@@ -60,10 +80,11 @@ public class CategoryService (IUnitOfWork unitOfWork,
     public async Task<PagedList<CategoryDto>> GetAllPaged(int pageSize, int pageNumber)
     {
         var categories = await GetAll();
-        PagedList<CategoryDto> pagedList = new(categories, categories.Count, pageNumber, pageSize);
-        return pagedList.ToPagedList(categories,
-                                      pageSize,
-                                      pageNumber);
+        PagedList<CategoryDto> pagedList = new(categories, categories.Count, 
+                                                pageNumber, pageSize);
+        return pagedList.ToPagedList(categories, 
+                                     pageSize, 
+                                     pageNumber);
     }
 
     public async Task<CategoryDto> GetById(int id)
@@ -71,25 +92,32 @@ public class CategoryService (IUnitOfWork unitOfWork,
         var category = await _unitOfWork.CategoryInterface.GetByIdAsync(id);
         if (category is null)
         {
-            throw new ArgumentException("Category topilmadi!");
+            throw new ArgumentNullException("Category topilmadi!");
         }
         return _mapper.Map<CategoryDto>(category);
+    }
+
+    public async Task<List<CategoryDto>> GetPagedWithTSQL(int pageSize, int pageNumber)
+    {
+        var list = await _unitOfWork.CategoryInterface.GetCategoriesByTSQLPaginationAsync(pageSize, pageNumber);
+        return list.Select(c => _mapper.Map<CategoryDto>(c))
+                   .ToList();
     }
 
     public async Task Update(UpdateCategoryDto categoryDto)
     {
         if (categoryDto is null)
         {
-            throw new ArgumentNullException("Category null bo'lib qoldi!");
+            throw new ArgumentNullException("Category null bo'p qoldi!");
         }
+
         var categories = await _unitOfWork.CategoryInterface.GetAllAsync();
         var category = categories.FirstOrDefault(c => c.Id == categoryDto.Id);
-
         if (category is null)
         {
             throw new ArgumentNullException("Category topilmadi!");
         }
-
+        
         var updateCategory = _mapper.Map<Category>(categoryDto);
         if (!updateCategory.IsValid())
         {

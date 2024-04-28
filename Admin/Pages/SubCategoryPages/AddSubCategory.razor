@@ -1,0 +1,86 @@
+﻿@page "/subcategories/add"
+
+<EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Name" Required="true" RequiredError="Name is required" HelperText="Min. 3 characters"
+                                  @bind-Value="model.Name"
+                                  Validation="@(new Func<string>(NameIsValid))" />
+                </MudCardContent>
+
+                <MudCardContent>
+                    <MudSelect T="string" @bind-Value="categoryName" Label="categoryName" AnchorOrigin="Origin.BottomCenter">
+                        @foreach(var category in categories!)
+                        {
+                            <MudSelectItem T="string" Value="@category.Name">@category.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudCardContent>
+
+                <MudCardActions>
+                    <MudSpacer />
+                    <MudSpacer />
+                    <MudButton OnClick="Cancel" ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" Class="ml-auto">Cancel</MudButton>
+                    <MudSpacer />
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" Class="ml-auto">Save</MudButton>
+                    <MudSpacer />
+                    <MudSpacer />
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</EditForm>
+
+
+@code {
+    @inject HttpClient httpClient
+    @inject NavigationManager navigationManager
+    bool success;
+    string? categoryName;
+    AddSubCategoryDto model = new AddSubCategoryDto();
+    List<CategoryDto>? categories = new List<CategoryDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await httpClient.GetAsync($"{Constants.BaseUrl}/Category/getall");
+        if (response.IsSuccessStatusCode)
+        {
+            categories = await response.Content.ReadFromJsonAsync<List<CategoryDto>>();
+        }
+    }
+
+    private string NameIsValid()
+    {
+        if (model.Name.Length < 3)
+        {
+            return "Name must be at least 3 characters long.";
+        }
+        return null;
+    }
+
+    private async void OnValidSubmit(EditContext context)
+    {
+        model.CategoryId = categories!.FirstOrDefault(c => c.Name == categoryName)!.Id;
+        var json = JsonConvert.SerializeObject(model);
+        Console.WriteLine(json);
+        var data = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync($"{Constants.BaseUrl}/SubCategory", data);
+        if (response.IsSuccessStatusCode)
+        {
+            success = true;
+            navigationManager.NavigateTo("/subcategories");
+        }
+        else
+        {
+            success = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        navigationManager.NavigateTo("/subcategories");
+    }
+}

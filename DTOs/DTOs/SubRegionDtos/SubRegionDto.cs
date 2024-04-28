@@ -1,17 +1,7 @@
-﻿
+﻿namespace DTO.DTOs.SubRegionDtos;
 
-using DataAccesLayer.Models;
-
-namespace DTO.DTOs.SubRegionDtos;
-
-public class SubRegionDto:BaseDto
+public class SubRegionDto : BaseDto
 {
-
-    public int? RegionId { get; set; }
-
     public string? Name { get; set; }
-
-    public virtual ICollection<AdsElon> AdsElons { get; set; } = new List<AdsElon>();
-
-    public virtual Region? Region { get; set; }
+    public int? RegionId { get; set; }
 }

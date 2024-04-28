@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DataAccesLayer.Models;
 
-public partial class Image : BaseEntity
+public partial class Image:BaseEntity
 {
     [MinLength(5), MaxLength(300)]
     public string? Url { get; set; }

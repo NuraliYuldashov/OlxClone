@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DataAccesLayer.Models;
 
-public partial class SubCategory : BaseEntity
+public partial class SubCategory:BaseEntity
 {
 
     public int? CategoryId { get; set; }

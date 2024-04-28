@@ -1,0 +1,20 @@
+<div class="container d-flex justify-content-start">
+    <a type="button" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne" class="category mx-2" *ngFor="let category of categories"
+    (click)="getSubCategories(category.Id)" >
+        <div class="c-img"><img [src]="category.ImageUrl" alt=""></div>
+        <h4>{{category.Name}}</h4>
+    </a>
+</div>
+
+<div class="container">
+    <div class="gray accordion accordion-flush" id="accordionFlushExample">
+        <div class="accordion-item">
+          <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+            <div class="accordion-body">
+                <a href="#" class="btn btn-outline-primary">All</a>
+                <a href="#" class="btn btn-outline-primary" *ngFor="let subcategory of subCategories">{{subcategory.Name}}</a>  
+            </div>
+          </div>
+        </div>
+      </div>
+</div>

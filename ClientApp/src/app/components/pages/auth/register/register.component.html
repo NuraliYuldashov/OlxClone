@@ -1,0 +1,30 @@
+<div class="nimadir mt-5">
+    <div class="div">
+        <h2 class="text-center">Register</h2>
+        <form action="" [formGroup]="registerForm">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" class="form-control" id="name" [formControl]="fullName!">
+            </div>
+            <div class="form-group">
+                <label for="tel">Phone Number</label>
+                <input type="tel" class="form-control" id="tel" [formControl]="phoneNumber!">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" id="password" [formControl]="password!">
+            </div>
+            <div class="form-group">
+                <label for="password_confirmation">Confirm Password</label>
+                <input type="password" class="form-control" id="password_confirmation" [formControl]="confirmPassword!">
+            </div>
+            <div class="form-group">
+                <a [routerLink]="['/login']">Login</a>
+            </div>
+            <div class="d-flex justify-content-center">
+                <button [routerLink]="['/home']" type="submit" class="btn btn-secondary mt-3">Cancel</button>
+                <button [disabled]="!isValidConfirmPassword() || !isValidForm()"  (click)="register()" class="btn btn-primary ms-2 mt-3">Register</button>
+            </div>
+        </form>
+    </div>
+</div>

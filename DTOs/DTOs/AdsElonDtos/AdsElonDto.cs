@@ -1,12 +1,13 @@
-﻿
-
-using DataAccesLayer.Models;
+﻿using DataAccesLayer.Models;
+using DTO.DTOs.SubCategoryDtos;
+using DTO.DTOs.SubRegionDtos;
+using DTO.UserDtos;
 
 namespace DTO.DTOs.AdsElonDtos;
 
-public partial class AdsElonDto:BaseDto
+public partial class AdsElonDto : BaseDto
 {
-    public int? UserId { get; set; }
+    public string? UserId { get; set; }
 
     public string? Title { get; set; }
 
@@ -14,19 +15,52 @@ public partial class AdsElonDto:BaseDto
 
     public string? Description { get; set; }
 
-    public string? Photo { get; set; }
-
     public int? SubCategoryId { get; set; }
 
-    public int? SubRegion { get; set; }
+    public int? SubRegionId { get; set; }
 
     public string? State { get; set; } 
 
-    public virtual ICollection<Image> Images { get; set; } = new List<Image>();
+    public List<string> ImageUrls { get; set; } = new();
 
-    public virtual SubCategory? SubCategory { get; set; }
+    public virtual SubCategoryDto? SubCategoryDto { get; set; }
 
-    public virtual SubRegion? SubRegionNavigation { get; set; }
+    public virtual SubRegionDto? SubRegionDto { get; set; }
 
-    public virtual User? User { get; set; }
+    public UserDto? User { get; set; }
+
+
+    public static implicit operator AdsElonDto(AdsElon v)
+        => new()
+        {
+            Id = v.Id,
+            UserId = v.UserId,
+            Title = v.Title,
+            Price = v.Price,
+            Description = v.Description,
+            SubRegionId = v.SubRegionId,
+            SubRegionDto = new SubRegionDto()
+            {
+                Id = v.SubRegionNavigation.Id,
+                Name = v.SubRegionNavigation.Name,
+                RegionId = v.SubRegionNavigation.RegionId
+            },
+            SubCategoryId = v.SubCategoryId,
+            SubCategoryDto = new SubCategoryDto()
+            {
+                Id = v.SubCategory.Id,
+                Name = v.SubCategory.Name,
+                CategoryId = v.SubCategory.CategoryId
+            },
+            State = v.State,
+            ImageUrls = v.Images.Select(t => t.Url).ToList(),
+            User = new UserDto()
+            {
+                Id = v.UserId,
+                PhoneNumber = v.User.PhoneNumber,
+                FullName = v.User.FullName,
+                ImageUrl = v.User.ImageUrl,
+                LastActive = v.User.LastActive
+            }
+        };
 }

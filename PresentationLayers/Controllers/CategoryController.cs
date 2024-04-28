@@ -2,12 +2,13 @@
 using BusinessLogicLayer.Interfaces;
 using DTO.DTOs.CategoryDtos;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace PresentationLayers.Controllers;
-
 [Route("api/[controller]")]
 [ApiController]
-public class CategoryController(ICategoryService categoryService) : ControllerBase
+public class CategoryController(ICategoryService categoryService)
+    : ControllerBase
 {
     private readonly ICategoryService _categoryService = categoryService;
 
@@ -19,7 +20,14 @@ public class CategoryController(ICategoryService categoryService) : ControllerBa
         try
         {
             var categories = await _categoryService.GetAll();
-            return Ok(categories);
+
+            var json = JsonConvert.SerializeObject(categories, Formatting.Indented,
+                new JsonSerializerSettings() 
+                {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                });
+
+            return Ok(json);
         }
         catch (Exception ex)
         {
@@ -27,12 +35,12 @@ public class CategoryController(ICategoryService categoryService) : ControllerBa
         }
     }
 
-    [HttpGet("paged")] 
+    [HttpGet("paged")]
     public async Task<IActionResult> Get(int pageSize = 10, int pageNumber = 1)
     {
         try
         {
-            var categories = await _categoryService.GetAllPaged(pageSize, pageNumber);
+            var categories = await _categoryService.GetPagedWithTSQL(pageSize, pageNumber);
             return Ok(categories);
         }
         catch (Exception ex)
@@ -47,9 +55,9 @@ public class CategoryController(ICategoryService categoryService) : ControllerBa
         try
         {
             var category = await _categoryService.GetById(id);
-            return Ok(category);  
+            return Ok(category);
         }
-        catch (ArgumentNullException ex)
+        catch(ArgumentNullException ex)
         {
             return NotFound(ex.Message);
         }
@@ -67,13 +75,13 @@ public class CategoryController(ICategoryService categoryService) : ControllerBa
             await _categoryService.Add(dto);
             return Ok();
         }
-        catch (ArgumentNullException ex) 
+        catch (ArgumentNullException ex)
         {
             return NotFound(ex.Message);
         }
         catch (CustomException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(ex.ErrorMessage);
         }
         catch (Exception ex)
         {
@@ -86,7 +94,7 @@ public class CategoryController(ICategoryService categoryService) : ControllerBa
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public  async Task<IActionResult> Put(UpdateCategoryDto dto)
+    public async Task<IActionResult> Put(UpdateCategoryDto dto)
     {
         try
         {
@@ -99,7 +107,7 @@ public class CategoryController(ICategoryService categoryService) : ControllerBa
         }
         catch (CustomException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(ex.ErrorMessage);
         }
         catch (Exception ex)
         {
@@ -124,5 +132,18 @@ public class CategoryController(ICategoryService categoryService) : ControllerBa
             return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
     }
-    
+
+    [HttpGet("filter")]
+    public async Task<IActionResult> Filter(string name, bool sorted)
+    {
+        try
+        {
+            var categories = await _categoryService.Filter(sorted, (n, sorted) => n.Contains(name) && sorted);
+            return Ok(categories);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+        }
+    }
 }

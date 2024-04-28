@@ -1,10 +1,7 @@
-﻿
+﻿namespace DTO.DTOs.CategoryDtos;
 
-using DataAccesLayer.Models;
-
-namespace DTO.DTOs.CategoryDtos;
-
-public partial class AddCategoryDto
+public class AddCategoryDto
 {
     public string? Name { get; set; }
+    public string? ImageUrl { get; set; }
 }

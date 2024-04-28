@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DataAccesLayer.Models;
 
-public partial class Region : BaseEntity
+public partial class Region:BaseEntity
 {
 
     [Required, MinLength(3), MaxLength(1000)]

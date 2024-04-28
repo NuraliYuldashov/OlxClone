@@ -1,0 +1,67 @@
+@page "/regions/add"
+@inject ISnackbar Snackbar
+
+<EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Name" Required="true" RequiredError="Name is required" HelperText="Min. 3 characters"
+                                  @bind-Value="model.Name"
+                                  Validation="@(new Func<string>(NameIsValid))" />
+                </MudCardContent>
+                <MudCardActions>
+                    <MudSpacer />
+                    <MudSpacer />
+                    <MudButton OnClick="Cancel" ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" Class="ml-auto">Cancel</MudButton>
+                    <MudSpacer />
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" Class="ml-auto">Save</MudButton>
+                    <MudSpacer />
+                    <MudSpacer />
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</EditForm>
+
+
+@code {
+    @inject HttpClient httpClient
+    @inject NavigationManager navigationManager
+    bool success;
+    bool uploading;
+    string? imageUrl;
+
+    AddRegionDto model = new AddRegionDto();
+
+    private string NameIsValid()
+    {
+        if (model.Name.Length < 3)
+        {
+            return "Name must be at least 3 characters long.";
+        }
+        return null;
+    }
+
+    private async void OnValidSubmit(EditContext context)
+    {
+        var json = JsonConvert.SerializeObject(model);
+        var data = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync($"{Constants.BaseUrl}/Region", data);
+        if (response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Region added successfully.", Severity.Success);
+            navigationManager.NavigateTo("/regions");
+        }
+        else 
+        {
+            Snackbar.Add("Something went wrong!", Severity.Error);
+        }
+    }
+
+    private async void Cancel()
+    {
+        navigationManager.NavigateTo("/regions");
+    }
+}

@@ -1,0 +1,88 @@
+@page "/subcategories"
+@inject ISnackbar Snackbar
+
+<MudTable Items="@SubCategoryDtos" Dense="true" Hover="true" 
+                                Bordered="true" Striped="true"
+                                Loading="@Loading"
+                                Filter="new Func<SubCategoryDto,bool>(FilterFunc1)" @bind-SelectedItem="selectedItem1">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Subcategories table</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" OnClick="OpenAddPage" StartIcon="@Icons.Material.Filled.Add" Color="Color.Success">Add</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Category Id</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Name">@context.CategoryId</MudTd>
+        <MudIconButton @onclick="() => OpenEditPage(context.Id)" Icon="@Icons.Material.Filled.Edit" aria-label="edit"></MudIconButton>
+        <MudIconButton @onclick="() => Delete(context.Id)" Icon="@Icons.Material.Filled.Delete" aria-label="delete"></MudIconButton>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+@code {
+    @inject HttpClient httpClient
+    @inject NavigationManager navigationManager
+    private string searchString1 = "";
+    private SubCategoryDto selectedItem1 = null;
+    private HashSet<SubCategoryDto> selectedItems = new HashSet<SubCategoryDto>();
+    private bool Loading = true;
+
+    private List<SubCategoryDto> SubCategoryDtos = new List<SubCategoryDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loading = true;
+        var response = await httpClient.GetAsync($"{Constants.BaseUrl}/SubCategory/getall");
+        if (response.IsSuccessStatusCode)
+        {
+            SubCategoryDtos = (await response.Content.ReadFromJsonAsync<IEnumerable<SubCategoryDto>>())!.ToList();
+            Loading = false;
+        }
+    }
+
+    private bool FilterFunc1(SubCategoryDto element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(SubCategoryDto element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private void OpenAddPage()
+    {
+        navigationManager.NavigateTo("/subcategories/add");
+    }
+
+    private void OpenEditPage(int id)
+    {
+        navigationManager.NavigateTo($"/subcategories/edit/{id}");
+    }
+
+    private async void Delete(int id) 
+    {
+        var response = await httpClient.DeleteAsync($"{Constants.BaseUrl}/SubCategory?id={id}");
+        if (response.IsSuccessStatusCode)
+        {
+            SubCategoryDtos.Remove(SubCategoryDtos.FirstOrDefault(x => x.Id == id)!);
+            StateHasChanged();
+            Snackbar.Add($"SubCategory deleted!", Severity.Success);
+        }
+        else 
+        {
+            Snackbar.Add(response.StatusCode.ToString(), Severity.Error);
+        }
+    }
+}

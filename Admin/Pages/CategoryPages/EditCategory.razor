@@ -1,0 +1,84 @@
+﻿@page "/categories/edit/{Id}"
+@inject ISnackbar Snackbar
+
+<EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Name" Required="true" RequiredError="Name is required" HelperText="Min. 3 characters"
+                                  @bind-Value="model.Name"
+                                  Validation="@(new Func<string>(NameIsValid))" />
+                </MudCardContent>
+                <MudCardActions>
+                    <MudSpacer />
+                    <MudSpacer />
+                    <MudButton OnClick="Cancel" ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" Class="ml-auto">Cancel</MudButton>
+                    <MudSpacer />
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" Class="ml-auto">Save</MudButton>
+                    <MudSpacer />
+                    <MudSpacer />
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</EditForm>
+
+
+@code {
+    @inject HttpClient httpClient
+    @inject NavigationManager navigationManager
+    bool success;
+    CategoryDto model = new();
+
+    [Parameter]
+    public string Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await httpClient.GetAsync($"{Constants.BaseUrl}/Category/{Id}");
+        if (response.IsSuccessStatusCode)
+        {
+            model = JsonConvert.DeserializeObject<CategoryDto>(await response.Content.ReadAsStringAsync());   
+        }
+    }
+
+    private string NameIsValid()
+    {
+        if (model.Name.Length < 3)
+        {
+            return "Name must be at least 3 characters long.";
+        }
+        return null;
+    }
+
+    private async void OnValidSubmit(EditContext context)
+    {
+        var updateModel = new UpdateCategoryDto
+        {
+            Id = model.Id,
+            Name = model.Name
+        };
+
+        var json = JsonConvert.SerializeObject(updateModel);
+        var data = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await httpClient.PutAsync($"{Constants.BaseUrl}/Category", data);
+        if (response.IsSuccessStatusCode)
+        {
+            success = true;
+            Snackbar.Add($"Category {model.Name} updated.", Severity.Success);
+            navigationManager.NavigateTo("/");
+        }
+        else
+        {
+            success = false;
+            Snackbar.Add($"Error updating category {model.Name}.", Severity.Error);
+        }
+    }
+
+    private void Cancel()
+    {
+        navigationManager.NavigateTo("/");
+    }
+}

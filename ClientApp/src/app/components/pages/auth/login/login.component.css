@@ -1,0 +1,10 @@
+.div {
+    width: 400px;
+    margin: 0 auto;
+}
+
+.nimadir {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

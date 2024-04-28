@@ -1,0 +1,10 @@
+#search {
+    width: 500px;
+    padding: 10px;
+    font-size: 20px;
+}
+
+select {
+    width: 150px;
+    margin-left: 10px;
+}

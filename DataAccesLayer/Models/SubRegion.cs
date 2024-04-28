@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DataAccesLayer.Models;
 
-public partial class SubRegion : BaseEntity
+public partial class SubRegion:BaseEntity
 {
 
     public int? RegionId { get; set; }

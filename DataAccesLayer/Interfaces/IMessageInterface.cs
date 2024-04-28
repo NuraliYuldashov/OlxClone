@@ -1,6 +1,4 @@
-﻿
-
-using DataAccesLayer.Models;
+﻿using DataAccesLayer.Models;
 
 namespace DataAccesLayer.Interfaces;
 

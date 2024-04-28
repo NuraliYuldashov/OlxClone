@@ -1,6 +1,6 @@
 ﻿namespace BusinessLogicLayer.Extended;
-
-public class CustomException(string message) : Exception
+public class CustomException(string message)
+    : Exception
 {
-    private string ErrorMessage { get; } = message;
+    public string ErrorMessage { get; } = message;
 }

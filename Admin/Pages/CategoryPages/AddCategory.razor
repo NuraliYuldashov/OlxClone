@@ -1,0 +1,134 @@
+﻿@page "/categories/add"
+@inject ISnackbar Snackbar
+
+<EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Name" Required="true" RequiredError="Name is required" HelperText="Min. 3 characters"
+                                  @bind-Value="model.Name"
+                                  Validation="@(new Func<string>(NameIsValid))" />
+                </MudCardContent>
+
+                    <MudCardContent Class="mb-3">
+                        <MudGrid>
+                            <MudItem xs="4" >
+                                <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles">
+                                    <ButtonTemplate Context="nimadir">
+                                        <MudFab HtmlTag="label"
+                                                Color="Color.Secondary"
+                                                Icon="@Icons.Material.Filled.Image"
+                                                Label="Load picture"
+                                                for="@nimadir.Id" />
+                                    </ButtonTemplate>
+                                </MudFileUpload>
+                                @if (uploading)
+                                {
+                                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7"/>
+                                }
+                            </MudItem>
+                             @if (!string.IsNullOrEmpty(imageUrl))
+                                {
+                                    <MudItem  xs="8" >
+                                            <MudImage  Width="332" Height="250"  Src="@imageUrl" Alt="" Elevation="25" Class="rounded-lg"/>
+                                    </MudItem>
+                                }
+                        </MudGrid>
+                    </MudCardContent>
+
+                <MudCardActions>
+                    <MudSpacer />
+                    <MudSpacer />
+                    <MudButton OnClick="Cancel" ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" Class="ml-auto">Cancel</MudButton>
+                    <MudSpacer />
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success" Class="ml-auto">Save</MudButton>
+                    <MudSpacer />
+                    <MudSpacer />
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</EditForm>
+
+
+@code {
+    @inject HttpClient httpClient
+    @inject NavigationManager navigationManager
+    bool success;
+    bool uploading;
+    string? imageUrl;
+
+    AddCategoryDto model = new AddCategoryDto();
+
+    private string NameIsValid()
+    {
+        if (model.Name.Length < 3)
+        {
+            return "Name must be at least 3 characters long.";
+        }
+        return null;
+    }
+
+    private async void OnValidSubmit(EditContext context)
+    {
+        var json = JsonConvert.SerializeObject(model);
+        var data = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync($"{Constants.BaseUrl}/Category", data);
+        if (response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Category added successfully.", Severity.Success);
+            navigationManager.NavigateTo("/");
+        }
+        else 
+        {
+            Snackbar.Add("Something went wrong!", Severity.Error);
+        }
+    }
+
+    private async void Cancel()
+    {
+        if (!string.IsNullOrEmpty(imageUrl)) 
+        {
+            var removeImageModel = new DTOs.CategoryDtos.RemoveImageDto(imageUrl);
+            var json = JsonConvert.SerializeObject(removeImageModel);
+            var Urlcontent = new StringContent(json, Encoding.UTF8, "application/json");
+            
+            await httpClient.PostAsync($"{Constants.BaseUrl}/Images/Delete", Urlcontent);
+        }
+        navigationManager.NavigateTo("/");
+    }
+
+    private async void UploadFiles(IBrowserFile file)
+    {
+        if (!string.IsNullOrEmpty(imageUrl)) 
+        {
+            var removeImageModel = new DTOs.CategoryDtos.RemoveImageDto(imageUrl);
+            var json = JsonConvert.SerializeObject(removeImageModel);
+            var Urlcontent = new StringContent(json, Encoding.UTF8, "application/json");
+            
+            await httpClient.PostAsync($"{Constants.BaseUrl}/Images/Delete", Urlcontent);
+        }
+
+        uploading = true;
+        var content = new MultipartFormDataContent();
+        //extend the size of the file
+        content.Add(new StreamContent
+            (file.OpenReadStream(maxAllowedSize: 30 * 1024 * 1024)), "file", file.Name);
+
+        var response = await httpClient.PostAsync($"{Constants.BaseUrl}/Images", content);
+        if (response.IsSuccessStatusCode)
+        {
+            model.ImageUrl = await response.Content.ReadAsStringAsync();
+            imageUrl = model.ImageUrl;
+            Snackbar.Add("Image uploaded successfully.", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Something went wrong!", Severity.Error);
+        }
+        uploading = false;
+        StateHasChanged();
+    }
+}

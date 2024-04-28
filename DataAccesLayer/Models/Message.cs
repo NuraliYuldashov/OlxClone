@@ -2,12 +2,12 @@
 
 namespace DataAccesLayer.Models;
 
-public partial class Message : BaseEntity
+public partial class Message:BaseEntity
 {
 
     public int? ChatId { get; set; }
 
-    public int? UserId { get; set; }
+    public string? UserId { get; set; }
 
     public string? Text { get; set; }
 

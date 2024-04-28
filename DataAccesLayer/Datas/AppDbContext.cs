@@ -1,16 +1,16 @@
 ﻿using DataAccesLayer.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataAccesLayer.Datas
 {
-    public partial class AppDbContext : DbContext
+    public class AppDbContext : IdentityDbContext<User>
     {
-    
-
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-        {
-
-        }
+        public AppDbContext(DbContextOptions<AppDbContext> options)
+            : base(options) 
+            {
+                Database.EnsureCreated();
+            }
 
         public DbSet<AdsElon> AdsElons { get; set; }
         public DbSet<Category> Categories { get; set; }
@@ -20,7 +20,6 @@ namespace DataAccesLayer.Datas
         public DbSet<Region> Regions { get; set; }
         public DbSet<SubCategory> SubCategories { get; set; }
         public DbSet<SubRegion> SubRegions { get; set; }
-        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -29,14 +28,17 @@ namespace DataAccesLayer.Datas
             ConfigureImage(modelBuilder);
             ConfigureMessage(modelBuilder);
             ConfigureChat(modelBuilder);
+
+            base.OnModelCreating(modelBuilder);
         }
 
         private void ConfigureCategory(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<SubCategory>()
-                .HasOne(sc => sc.Category)
-                .WithMany(c => c.SubCategories)
-                .HasForeignKey(sc => sc.CategoryId);
+            modelBuilder.Entity<Category>()
+                .HasMany(s => s.SubCategories)
+                .WithOne(c => c.Category)
+                .HasForeignKey(c => c.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
         private void ConfigureAdsElon(ModelBuilder modelBuilder)
@@ -72,7 +74,7 @@ namespace DataAccesLayer.Datas
                 .WithMany(u => u.Messages)
                 .HasForeignKey(m => m.UserId);
         }
-
+        
         private void ConfigureChat(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Chat>()

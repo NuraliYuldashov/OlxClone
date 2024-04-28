@@ -1,0 +1,34 @@
+<nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
+  <div class="container-fluid px-5">
+    <a class="navbar-brand" href="#">OLX Clone</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#">Kategoriyalar</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">E'lonlar</a>
+        </li>
+      </ul>
+      <div *ngIf="!loggedIn()" class="d-flex">
+        <a [routerLink]="['/login']" class="btn btn-light">Kirish</a>
+      </div>
+ 
+<div  *ngIf="loggedIn()"  class="btn-group">
+  <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+    {{getUserFullName()}}
+  </button>
+  <ul class="dropdown-menu">
+    <li><a class="dropdown-item" href="#">Profil</a></li>
+    <li><a class="dropdown-item" [routerLink]="['/my-ads']">Mening e'lonlarim</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" (click)="logout()">Chiqish</a></li>
+  </ul>
+</div>
+
+    </div>
+  </div>
+</nav>
